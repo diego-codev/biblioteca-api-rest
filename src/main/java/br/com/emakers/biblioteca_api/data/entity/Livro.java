@@ -1,16 +1,17 @@
 package br.com.emakers.biblioteca_api.data.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
 
+import br.com.emakers.biblioteca_api.data.dto.request.LivroRequestDTO;
+
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "livro")
@@ -25,4 +26,11 @@ public class Livro {
     @Column(name = "data_lancamento")
     @Temporal(TemporalType.DATE)
     private Date data_lancamento;
+
+    @Builder
+    public Livro(LivroRequestDTO dto) {
+        this.nome = dto.getTitulo();
+        this.autor = dto.getAutor();
+        // quantidade não existe na entidade, ajuste se necessário
+    }
 }

@@ -1,14 +1,14 @@
 package br.com.emakers.biblioteca_api.data.entity;
 
+import br.com.emakers.biblioteca_api.data.dto.request.PessoaRequestDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "pessoa")
@@ -26,4 +26,11 @@ public class Pessoa {
     private String email;
     @Column(name = "senha", nullable = false, length = 100)
     private String senha;
+
+    @Builder
+    public Pessoa(PessoaRequestDTO dto) {
+        this.nome = dto.getNome();
+        this.email = dto.getEmail();
+        this.cep = dto.getCep();
+    }
 }
