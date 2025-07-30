@@ -26,11 +26,14 @@ public class Livro {
     @Column(name = "data_lancamento")
     @Temporal(TemporalType.DATE)
     private Date data_lancamento;
+    @Column(name = "quantidade")
+    private Integer quantidade;
 
     @Builder
     public Livro(LivroRequestDTO dto) {
         this.nome = dto.getTitulo();
         this.autor = dto.getAutor();
-        // quantidade não existe na entidade, ajuste se necessário
+        this.quantidade = dto.getQuantidade();
     }
+
 }

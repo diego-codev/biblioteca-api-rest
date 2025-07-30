@@ -36,7 +36,7 @@ public class LivroService {
         Livro livro = getLivroEntityById(idLivro);
         livro.setNome(livroRequestDTO.getTitulo());
         livro.setAutor(livroRequestDTO.getAutor());
-        // Se tiver campo quantidade, adicione aqui
+        // ...
         livroRepository.save(livro);
         return new LivroResponseDTO(livro);
     }

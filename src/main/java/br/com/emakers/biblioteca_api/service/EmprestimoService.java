@@ -37,6 +37,9 @@ public class EmprestimoService {
     public EmprestimoResponseDTO createEmprestimo(EmprestimoRequestDTO emprestimoRequestDTO) {
         Livro livro = livroRepository.findById(emprestimoRequestDTO.getIdLivro())
             .orElseThrow(() -> new RuntimeException("Livro não encontrado"));
+        if (livro.getQuantidade() == null || livro.getQuantidade() <= 0) {
+            throw new RuntimeException("Livro indisponível para empréstimo");
+        }
         Pessoa pessoa = pessoaRepository.findById(emprestimoRequestDTO.getIdPessoa())
             .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
         Emprestimo emprestimo = Emprestimo.builder()
@@ -46,6 +49,9 @@ public class EmprestimoService {
             .dataEmprestimo(LocalDate.now())
             .dataDevolucao(null)
             .build();
+        // Decrementa quantidade
+        livro.setQuantidade(livro.getQuantidade() - 1);
+        livroRepository.save(livro);
         emprestimoRepository.save(emprestimo);
         return new EmprestimoResponseDTO(emprestimo);
     }
@@ -54,7 +60,13 @@ public class EmprestimoService {
     public EmprestimoResponseDTO updateEmprestimo(Long idLivro, Long idPessoa, EmprestimoRequestDTO emprestimoRequestDTO) {
         Emprestimo emprestimo = getEmprestimoEntityById(idLivro, idPessoa);
         // Exemplo: atualizar dataDevolucao ao devolver o livro
-        emprestimo.setDataDevolucao(LocalDate.now());
+        if (emprestimo.getDataDevolucao() == null) {
+            emprestimo.setDataDevolucao(LocalDate.now());
+            // Incrementa quantidade ao devolver
+            Livro livro = emprestimo.getLivro();
+            livro.setQuantidade(livro.getQuantidade() + 1);
+            livroRepository.save(livro);
+        }
         emprestimoRepository.save(emprestimo);
         return new EmprestimoResponseDTO(emprestimo);
     }
