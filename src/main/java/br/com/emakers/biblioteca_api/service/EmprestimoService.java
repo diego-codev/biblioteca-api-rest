@@ -1,3 +1,7 @@
+
+
+// Histórico de empréstimos por pessoa
+// (métodos estavam fora da classe, corrigido)
 package br.com.emakers.biblioteca_api.service;
 
 import br.com.emakers.biblioteca_api.data.entity.Emprestimo;
@@ -23,11 +27,23 @@ public class EmprestimoService {
     @Autowired
     private PessoaRepository pessoaRepository;
 
+
+    private static final int LIMITE_EMPRESTIMOS_ATIVOS = 3;
+
     public List<EmprestimoResponseDTO> getAllEmprestimos() {
         List<Emprestimo> emprestimos = emprestimoRepository.findAll();
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
+    public List<EmprestimoResponseDTO> getEmprestimosAtivosPorPessoa(Long idPessoa) {
+        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoaAndDataDevolucaoIsNull(idPessoa);
+        return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
+    }
+
+    public List<EmprestimoResponseDTO> getEmprestimosAtivos() {
+        List<Emprestimo> emprestimos = emprestimoRepository.findByDataDevolucaoIsNull();
+        return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
+    }
 
     public EmprestimoResponseDTO getEmprestimoById(Long idLivro, Long idPessoa) {
         Emprestimo emprestimo = getEmprestimoEntityById(idLivro, idPessoa);
@@ -42,11 +58,19 @@ public class EmprestimoService {
         }
         Pessoa pessoa = pessoaRepository.findById(emprestimoRequestDTO.getIdPessoa())
             .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+        // Limite de empréstimos ativos por pessoa
+        int emprestimosAtivos = emprestimoRepository.findByPessoaIdPessoaAndDataDevolucaoIsNull(pessoa.getIdPessoa()).size();
+        if (emprestimosAtivos >= LIMITE_EMPRESTIMOS_ATIVOS) {
+            throw new RuntimeException("Limite de empréstimos ativos atingido para esta pessoa");
+        }
+        LocalDate hoje = LocalDate.now();
+        LocalDate dataPrevistaDevolucao = hoje.plusDays(7);
         Emprestimo emprestimo = Emprestimo.builder()
             .dto(emprestimoRequestDTO)
             .livro(livro)
             .pessoa(pessoa)
-            .dataEmprestimo(LocalDate.now())
+            .dataEmprestimo(hoje)
+            .dataPrevistaDevolucao(dataPrevistaDevolucao)
             .dataDevolucao(null)
             .build();
         // Decrementa quantidade
@@ -57,9 +81,9 @@ public class EmprestimoService {
     }
 
 
-    public EmprestimoResponseDTO updateEmprestimo(Long idLivro, Long idPessoa, EmprestimoRequestDTO emprestimoRequestDTO) {
+    public EmprestimoResponseDTO updateEmprestimo(Long idLivro, Long idPessoa) {
         Emprestimo emprestimo = getEmprestimoEntityById(idLivro, idPessoa);
-        // Exemplo: atualizar dataDevolucao ao devolver o livro
+        // Não aceita dataDevolucao do usuário, apenas registra a devolução se ainda não devolvido
         if (emprestimo.getDataDevolucao() == null) {
             emprestimo.setDataDevolucao(LocalDate.now());
             // Incrementa quantidade ao devolver
@@ -81,5 +105,24 @@ public class EmprestimoService {
     private Emprestimo getEmprestimoEntityById(Long idLivro, Long idPessoa) {
         return emprestimoRepository.findById(new br.com.emakers.biblioteca_api.data.entity.EmprestimoId(idLivro, idPessoa))
             .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado"));
+    }
+
+    // Histórico de empréstimos por pessoa
+    public List<EmprestimoResponseDTO> getHistoricoEmprestimosPorPessoa(Long idPessoa) {
+        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoa(idPessoa);
+        return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
+    }
+
+    // Histórico de empréstimos por livro
+    public List<EmprestimoResponseDTO> getHistoricoEmprestimosPorLivro(Long idLivro) {
+        List<Emprestimo> emprestimos = emprestimoRepository.findByLivroIdLivro(idLivro);
+        return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
+    }
+
+    // Empréstimos atrasados
+    public List<EmprestimoResponseDTO> getEmprestimosAtrasados() {
+        LocalDate hoje = LocalDate.now();
+        List<Emprestimo> atrasados = emprestimoRepository.findByDataPrevistaDevolucaoBeforeAndDataDevolucaoIsNull(hoje);
+        return atrasados.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 }

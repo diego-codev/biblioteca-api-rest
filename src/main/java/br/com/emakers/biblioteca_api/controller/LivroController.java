@@ -1,4 +1,3 @@
-
 package br.com.emakers.biblioteca_api.controller;
 
 import br.com.emakers.biblioteca_api.data.dto.request.LivroRequestDTO;
@@ -46,5 +45,11 @@ public class LivroController {
     @DeleteMapping (value = "/delete/{idLivro}")
     public ResponseEntity<String> deleteLivro(@PathVariable Long idLivro) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.deleteLivro(idLivro));
+    }
+
+    // Busca livros na Google Books API
+    @GetMapping("/buscar-externo")
+    public ResponseEntity<List<LivroResponseDTO>> buscarLivrosGoogleBooks(@org.springframework.web.bind.annotation.RequestParam String termo) {
+        return ResponseEntity.ok(livroService.buscarLivrosGoogleBooks(termo));
     }
 }

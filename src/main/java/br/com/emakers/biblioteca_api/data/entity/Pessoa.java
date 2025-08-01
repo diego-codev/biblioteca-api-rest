@@ -32,5 +32,7 @@ public class Pessoa {
         this.nome = dto.getNome();
         this.email = dto.getEmail();
         this.cep = dto.getCep();
+        this.cpf = dto.getCpf();
+        this.senha = dto.getSenha();
     }
 }

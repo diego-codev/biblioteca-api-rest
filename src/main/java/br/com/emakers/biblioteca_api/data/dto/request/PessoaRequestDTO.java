@@ -42,4 +42,14 @@ public class PessoaRequestDTO {
     public void setCpf(String cpf) {
         this.cpf = cpf;
     }
+
+    @NotBlank(message = "Senha é obrigatória")
+    private String senha;
+
+    public String getSenha() {
+        return senha;
+    }
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
 }

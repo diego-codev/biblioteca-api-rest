@@ -25,17 +25,22 @@ public class Emprestimo {
     @JoinColumn(name = "idPessoa", referencedColumnName = "idPessoa")
     private Pessoa pessoa;
 
+
     @Column(name = "data_emprestimo")
     private LocalDate dataEmprestimo;
+
+    @Column(name = "data_prevista_devolucao")
+    private LocalDate dataPrevistaDevolucao;
 
     @Column(name = "data_devolucao")
     private LocalDate dataDevolucao;
 
     @Builder
-    public Emprestimo(EmprestimoRequestDTO dto, Livro livro, Pessoa pessoa, LocalDate dataEmprestimo, LocalDate dataDevolucao) {
+    public Emprestimo(EmprestimoRequestDTO dto, Livro livro, Pessoa pessoa, LocalDate dataEmprestimo, LocalDate dataPrevistaDevolucao, LocalDate dataDevolucao) {
         this.livro = livro;
         this.pessoa = pessoa;
         this.dataEmprestimo = dataEmprestimo;
+        this.dataPrevistaDevolucao = dataPrevistaDevolucao;
         this.dataDevolucao = dataDevolucao;
     }
 }

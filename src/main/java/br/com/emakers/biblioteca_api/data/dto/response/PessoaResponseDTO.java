@@ -5,17 +5,17 @@ import br.com.emakers.biblioteca_api.data.entity.Pessoa;
 public record PessoaResponseDTO(
     Long idPessoa,
     String nome,
-    String email,
+    String cpf,
     String cep,
-    String cpf
+    String email
 ) {
     public PessoaResponseDTO(Pessoa pessoa) {
         this(
             pessoa.getIdPessoa(),
             pessoa.getNome(),
-            pessoa.getEmail(),
+            pessoa.getCpf(),
             pessoa.getCep(),
-            pessoa.getCpf()
+            pessoa.getEmail()
         );
     }
 }

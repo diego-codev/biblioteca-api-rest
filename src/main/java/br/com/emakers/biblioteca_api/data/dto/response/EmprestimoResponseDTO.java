@@ -7,6 +7,7 @@ public record EmprestimoResponseDTO(
     Long idLivro,
     Long idPessoa,
     LocalDate dataEmprestimo,
+    LocalDate dataPrevistaDevolucao,
     LocalDate dataDevolucao
 ) {
     public EmprestimoResponseDTO(Emprestimo emprestimo) {
@@ -14,6 +15,7 @@ public record EmprestimoResponseDTO(
             emprestimo.getLivro() != null ? emprestimo.getLivro().getIdLivro() : null,
             emprestimo.getPessoa() != null ? emprestimo.getPessoa().getIdPessoa() : null,
             emprestimo.getDataEmprestimo(),
+            emprestimo.getDataPrevistaDevolucao(),
             emprestimo.getDataDevolucao()
         );
     }

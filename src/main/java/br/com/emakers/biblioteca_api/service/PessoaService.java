@@ -1,3 +1,4 @@
+
 package br.com.emakers.biblioteca_api.service;
 
 import br.com.emakers.biblioteca_api.data.dto.request.PessoaRequestDTO;
@@ -13,6 +14,10 @@ import java.util.stream.Collectors;
 public class PessoaService {
     @Autowired
     private PessoaRepository pessoaRepository;
+
+    public boolean existsById(Long idPessoa) {
+        return pessoaRepository.existsById(idPessoa);
+    }
 
     public List<PessoaResponseDTO> getAllPessoas() {
         List<Pessoa> pessoas = pessoaRepository.findAll();
@@ -38,6 +43,7 @@ public class PessoaService {
         pessoa.setEmail(pessoaRequestDTO.getEmail());
         pessoa.setCep(pessoaRequestDTO.getCep());
         pessoa.setCpf(pessoaRequestDTO.getCpf());
+        pessoa.setSenha(pessoaRequestDTO.getSenha());
         pessoaRepository.save(pessoa);
         return new PessoaResponseDTO(pessoa);
     }

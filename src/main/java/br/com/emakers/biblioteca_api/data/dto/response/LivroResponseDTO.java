@@ -1,20 +1,25 @@
+
 package br.com.emakers.biblioteca_api.data.dto.response;
 
+
 import br.com.emakers.biblioteca_api.data.entity.Livro;
-import java.util.Date;
+// import java.time.LocalDate; // Removed unused import
+
 
 public record LivroResponseDTO(
-    Long idLivro,
     String nome,
-    String autor,
-    Date dataLancamento
+    String autor
 ) {
     public LivroResponseDTO(Livro livro) {
         this(
-            livro.getIdLivro(),
             livro.getNome(),
-            livro.getAutor(),
-            livro.getData_lancamento()
+            livro.getAutor()
         );
+    }
+
+    // Construtor auxiliar para integração externa
+    public LivroResponseDTO(String nome, String autor) {
+        this.nome = nome;
+        this.autor = autor;
     }
 }
