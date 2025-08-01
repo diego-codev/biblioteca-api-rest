@@ -7,7 +7,11 @@ public record PessoaResponseDTO(
     String nome,
     String cpf,
     String cep,
-    String email
+    String email,
+    String logradouro,
+    String bairro,
+    String localidade,
+    String uf
 ) {
     public PessoaResponseDTO(Pessoa pessoa) {
         this(
@@ -15,7 +19,11 @@ public record PessoaResponseDTO(
             pessoa.getNome(),
             pessoa.getCpf(),
             pessoa.getCep(),
-            pessoa.getEmail()
+            pessoa.getEmail(),
+            pessoa.getLogradouro(),
+            pessoa.getBairro(),
+            pessoa.getLocalidade(),
+            pessoa.getUf()
         );
     }
 }

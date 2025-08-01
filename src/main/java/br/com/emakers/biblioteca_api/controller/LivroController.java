@@ -23,26 +23,27 @@ public class LivroController {
     @Autowired
     private LivroService livroService;
 
-    @GetMapping(value = "/all")
+    @GetMapping
     public ResponseEntity<List<LivroResponseDTO>> getAllLivros() {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.getAllLivros());
     }
 
-    @GetMapping(value = "/{idLivro}")
+    @GetMapping("/{idLivro}")
     public ResponseEntity<LivroResponseDTO> getLivroById(@PathVariable Long idLivro) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.getLivroById(idLivro));
     }
 
-    @PostMapping(value = "/create")
+    @PostMapping
     public ResponseEntity<LivroResponseDTO> createLivro(@RequestBody LivroRequestDTO livroRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(livroService.createLivro(livroRequestDTO));
     }
-    @PutMapping(value = "/update/{idLivro}")
+
+    @PutMapping("/{idLivro}")
     public ResponseEntity<LivroResponseDTO> updateLivro(@PathVariable Long idLivro, @RequestBody LivroRequestDTO livroRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.updateLivro(idLivro, livroRequestDTO));
     }
 
-    @DeleteMapping (value = "/delete/{idLivro}")
+    @DeleteMapping("/{idLivro}")
     public ResponseEntity<String> deleteLivro(@PathVariable Long idLivro) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.deleteLivro(idLivro));
     }

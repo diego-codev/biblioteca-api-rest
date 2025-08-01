@@ -33,12 +33,12 @@ public class SolicitacaoEmprestimoExternoController {
         return ResponseEntity.ok(service.listarSolicitacoes());
     }
 
-    @PostMapping("/aprovar/{id}")
+    @PutMapping("/solicitacoes/{id}/aprovar")
     public ResponseEntity<SolicitacaoEmprestimoExternoResponseDTO> aprovarSolicitacao(@PathVariable Long id) {
         return ResponseEntity.ok(service.aprovarSolicitacao(id));
     }
 
-    @PostMapping("/rejeitar/{id}")
+    @PutMapping("/solicitacoes/{id}/rejeitar")
     public ResponseEntity<SolicitacaoEmprestimoExternoResponseDTO> rejeitarSolicitacao(@PathVariable Long id) {
         return ResponseEntity.ok(service.rejeitarSolicitacao(id));
     }

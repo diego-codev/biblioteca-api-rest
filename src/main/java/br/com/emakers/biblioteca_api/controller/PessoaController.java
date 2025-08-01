@@ -23,27 +23,27 @@ public class PessoaController {
     @Autowired
     private PessoaService pessoaService;
 
-    @GetMapping(value = "/all")
+    @GetMapping
     public ResponseEntity<List<PessoaResponseDTO>> getAllPessoas() {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.getAllPessoas());
     }
 
-    @GetMapping(value = "/{idPessoa}")
+    @GetMapping("/{idPessoa}")
     public ResponseEntity<PessoaResponseDTO> getPessoaById(@PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.getPessoaById(idPessoa));
     }
 
-    @PostMapping(value = "/create")
+    @PostMapping
     public ResponseEntity<PessoaResponseDTO> createPessoa(@RequestBody PessoaRequestDTO pessoaRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pessoaService.createPessoa(pessoaRequestDTO));
     }
 
-    @PutMapping(value = "/update/{idPessoa}")
+    @PutMapping("/{idPessoa}")
     public ResponseEntity<PessoaResponseDTO> updatePessoa(@PathVariable Long idPessoa, @RequestBody PessoaRequestDTO pessoaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.updatePessoa(idPessoa, pessoaRequestDTO));
     }
 
-    @DeleteMapping(value = "/delete/{idPessoa}")
+    @DeleteMapping("/{idPessoa}")
     public ResponseEntity<String> deletePessoa(@PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.deletePessoa(idPessoa));
     }

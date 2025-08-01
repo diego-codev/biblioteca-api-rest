@@ -22,28 +22,27 @@ public class EmprestimoController {
     @Autowired
     private EmprestimoService emprestimoService;
 
-    @GetMapping(value = "/all")
+    @GetMapping
     public ResponseEntity<List<EmprestimoResponseDTO>> getAllEmprestimos() {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.getAllEmprestimos());
     }
 
-    @GetMapping(value = "/{idLivro}/{idPessoa}")
+    @GetMapping("/{idLivro}/{idPessoa}")
     public ResponseEntity<EmprestimoResponseDTO> getEmprestimoById(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.getEmprestimoById(idLivro, idPessoa));
     }
 
-
-    @PostMapping(value = "/emprestar")
+    @PostMapping
     public ResponseEntity<EmprestimoResponseDTO> emprestarLivro(@RequestBody EmprestimoRequestDTO emprestimoRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(emprestimoService.createEmprestimo(emprestimoRequestDTO));
     }
 
-    @PutMapping(value = "/devolucao/{idLivro}/{idPessoa}")
+    @PutMapping("/{idLivro}/{idPessoa}")
     public ResponseEntity<EmprestimoResponseDTO> devolverLivro(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.updateEmprestimo(idLivro, idPessoa));
     }
 
-    @DeleteMapping(value = "/delete/{idLivro}/{idPessoa}")
+    @DeleteMapping("/{idLivro}/{idPessoa}")
     public ResponseEntity<String> deleteEmprestimo(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.deleteEmprestimo(idLivro, idPessoa));
     }
@@ -71,5 +70,4 @@ public class EmprestimoController {
     public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtivos() {
         return ResponseEntity.ok(emprestimoService.getEmprestimosAtivos());
     }
-
 }
