@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario {
+public class Usuario implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,6 +20,50 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; // Exemplo: "USER", "ADMIN"
+    private UserRole role;
+
+    @Override
+    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
+        if (this.role == UserRole.ADMIN) {
+            return java.util.List.of(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.ADMIN.getRole()),
+                new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.USER.getRole())
+            );
+        }
+        return java.util.List.of(
+            new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.USER.getRole())
+        );
+    }
+
+    @Override
+    public String getPassword() {
+        return senha;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
