@@ -19,6 +19,8 @@ import br.com.emakers.biblioteca_api.data.dto.request.RegisterDTO;
 @RequestMapping("/auth")
 public class AuthenticationController {
     @Autowired
+    private br.com.emakers.biblioteca_api.infra.security.TokenService tokenService;
+    @Autowired
     private UsuarioRepository usuarioRepository;
 
     @PostMapping("/register")
@@ -38,6 +40,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = authenticationManager.authenticate(usernamePassword);
-        return ResponseEntity.ok().build();
+        var token = tokenService.generateToken((br.com.emakers.biblioteca_api.data.entity.Usuario) auth.getPrincipal());
+        return ResponseEntity.ok(new br.com.emakers.biblioteca_api.data.dto.response.LoginResponseDTO(token));
     }
 }
