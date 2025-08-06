@@ -1,3 +1,4 @@
+// ...existing code...
 package br.com.emakers.biblioteca_api.data.entity;
 
 import jakarta.persistence.*;
@@ -10,6 +11,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Usuario implements org.springframework.security.core.userdetails.UserDetails {
+    public Usuario(String email, String senha, UserRole role) {
+        this.email = email;
+        this.senha = senha;
+        this.role = role;
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
