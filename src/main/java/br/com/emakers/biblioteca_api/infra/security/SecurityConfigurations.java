@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfigurations {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityFilter securityFilter) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -27,6 +27,7 @@ public class SecurityConfigurations {
                 .requestMatchers("/emprestimos/**", "/solicitacoes-externas/**").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(securityFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 
