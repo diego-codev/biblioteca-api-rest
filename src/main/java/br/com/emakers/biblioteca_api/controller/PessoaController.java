@@ -1,4 +1,6 @@
+
 package br.com.emakers.biblioteca_api.controller;
+import io.swagger.v3.oas.annotations.Operation;
 
 import br.com.emakers.biblioteca_api.data.dto.request.PessoaRequestDTO;
 import br.com.emakers.biblioteca_api.data.dto.response.PessoaResponseDTO;
@@ -23,26 +25,31 @@ public class PessoaController {
     @Autowired
     private PessoaService pessoaService;
 
+    @Operation(summary = "Lista todas as pessoas cadastradas")
     @GetMapping
     public ResponseEntity<List<PessoaResponseDTO>> getAllPessoas() {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.getAllPessoas());
     }
 
+    @Operation(summary = "Busca uma pessoa pelo ID")
     @GetMapping("/{idPessoa}")
     public ResponseEntity<PessoaResponseDTO> getPessoaById(@PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.getPessoaById(idPessoa));
     }
 
+    @Operation(summary = "Cadastra uma nova pessoa")
     @PostMapping
     public ResponseEntity<PessoaResponseDTO> createPessoa(@RequestBody PessoaRequestDTO pessoaRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pessoaService.createPessoa(pessoaRequestDTO));
     }
 
+    @Operation(summary = "Atualiza os dados de uma pessoa pelo ID")
     @PutMapping("/{idPessoa}")
     public ResponseEntity<PessoaResponseDTO> updatePessoa(@PathVariable Long idPessoa, @RequestBody PessoaRequestDTO pessoaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.updatePessoa(idPessoa, pessoaRequestDTO));
     }
 
+    @Operation(summary = "Remove uma pessoa pelo ID")
     @DeleteMapping("/{idPessoa}")
     public ResponseEntity<String> deletePessoa(@PathVariable Long idPessoa) {
         return ResponseEntity.status(HttpStatus.OK).body(pessoaService.deletePessoa(idPessoa));

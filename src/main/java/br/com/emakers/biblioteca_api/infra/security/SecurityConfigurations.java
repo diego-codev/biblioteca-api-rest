@@ -16,6 +16,8 @@ public class SecurityConfigurations {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Swagger/OpenAPI public
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/register").permitAll()
                 .requestMatchers("/auth/**").permitAll()

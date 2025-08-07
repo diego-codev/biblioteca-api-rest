@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 
 @RestController
@@ -23,11 +24,13 @@ public class EmprestimoController {
     private EmprestimoService emprestimoService;
 
     @GetMapping
+    @Operation(summary = "Lista todos os empréstimos cadastrados")
     public ResponseEntity<List<EmprestimoResponseDTO>> getAllEmprestimos() {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.getAllEmprestimos());
     }
 
     @GetMapping("/{idLivro}/{idPessoa}")
+    @Operation(summary = "Busca um empréstimo pelo ID do livro e da pessoa")
     public ResponseEntity<EmprestimoResponseDTO> getEmprestimoById(@PathVariable Long idLivro, @PathVariable Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se USER, só pode acessar empréstimo próprio
@@ -38,6 +41,7 @@ public class EmprestimoController {
     }
 
     @PostMapping
+    @Operation(summary = "Realiza o empréstimo de um livro para uma pessoa")
     public ResponseEntity<EmprestimoResponseDTO> emprestarLivro(@RequestBody EmprestimoRequestDTO emprestimoRequestDTO, org.springframework.security.core.Authentication authentication) {
         // Pega o usuário autenticado
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
@@ -53,6 +57,7 @@ public class EmprestimoController {
     }
 
     @PutMapping("/{idLivro}")
+    @Operation(summary = "Devolve um livro emprestado")
     public ResponseEntity<EmprestimoResponseDTO> devolverLivro(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se ADMIN, pode devolver para qualquer pessoa; se USER, só para si mesmo
@@ -61,6 +66,7 @@ public class EmprestimoController {
     }
 
     @DeleteMapping("/{idLivro}")
+    @Operation(summary = "Remove um empréstimo de livro")
     public ResponseEntity<String> deleteEmprestimo(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se ADMIN, pode excluir para qualquer pessoa; se USER, só para si mesmo
@@ -70,6 +76,7 @@ public class EmprestimoController {
 
     // Histórico de empréstimos por pessoa
     @GetMapping("/historico/pessoa/{idPessoa}")
+    @Operation(summary = "Consulta o histórico de empréstimos de uma pessoa")
     public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorPessoa(@PathVariable Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se USER, só pode acessar histórico próprio
@@ -81,6 +88,7 @@ public class EmprestimoController {
 
     // Histórico de empréstimos por livro
     @GetMapping("/historico/livro/{idLivro}")
+    @Operation(summary = "Consulta o histórico de empréstimos de um livro")
     public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorLivro(@PathVariable Long idLivro, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         if (usuario.getRole().name().equals("ADMIN")) {
@@ -98,6 +106,7 @@ public class EmprestimoController {
 
     // Empréstimos atrasados
     @GetMapping("/atrasados")
+    @Operation(summary = "Lista todos os empréstimos atrasados")
     public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtrasados(org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         if (usuario.getRole().name().equals("ADMIN")) {
@@ -114,6 +123,7 @@ public class EmprestimoController {
 
     // Empréstimos ativos
     @GetMapping("/ativos")
+    @Operation(summary = "Lista todos os empréstimos ativos")
     public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtivos(org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         if (usuario.getRole().name().equals("ADMIN")) {

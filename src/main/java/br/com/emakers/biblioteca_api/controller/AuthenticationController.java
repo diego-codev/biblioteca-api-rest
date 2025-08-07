@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
 
 import br.com.emakers.biblioteca_api.data.dto.request.AuthenticationDTO;
 import br.com.emakers.biblioteca_api.data.dto.request.RegisterDTO;
@@ -24,6 +25,7 @@ public class AuthenticationController {
     private UsuarioRepository usuarioRepository;
 
     @PostMapping("/register")
+    @Operation(summary = "Realiza o cadastro de um novo usuário")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data) {
         if (usuarioRepository.findByEmail(data.login()).isPresent()) {
             return ResponseEntity.badRequest().build();
@@ -37,6 +39,7 @@ public class AuthenticationController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
+    @Operation(summary = "Realiza o login e retorna o token JWT")
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = authenticationManager.authenticate(usernamePassword);

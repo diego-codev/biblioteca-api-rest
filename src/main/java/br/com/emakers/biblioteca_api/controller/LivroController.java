@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 
 @RestController
@@ -24,32 +25,38 @@ public class LivroController {
     private LivroService livroService;
 
     @GetMapping
+    @Operation(summary = "Lista todos os livros cadastrados")
     public ResponseEntity<List<LivroResponseDTO>> getAllLivros() {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.getAllLivros());
     }
 
     @GetMapping("/{idLivro}")
+    @Operation(summary = "Busca um livro pelo ID")
     public ResponseEntity<LivroResponseDTO> getLivroById(@PathVariable Long idLivro) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.getLivroById(idLivro));
     }
 
     @PostMapping
+    @Operation(summary = "Cadastra um novo livro")
     public ResponseEntity<LivroResponseDTO> createLivro(@RequestBody LivroRequestDTO livroRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(livroService.createLivro(livroRequestDTO));
     }
 
     @PutMapping("/{idLivro}")
+    @Operation(summary = "Atualiza os dados de um livro pelo ID")
     public ResponseEntity<LivroResponseDTO> updateLivro(@PathVariable Long idLivro, @RequestBody LivroRequestDTO livroRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.updateLivro(idLivro, livroRequestDTO));
     }
 
     @DeleteMapping("/{idLivro}")
+    @Operation(summary = "Remove um livro pelo ID")
     public ResponseEntity<String> deleteLivro(@PathVariable Long idLivro) {
         return ResponseEntity.status(HttpStatus.OK).body(livroService.deleteLivro(idLivro));
     }
 
     // Busca livros na Google Books API
     @GetMapping("/buscar-externo")
+    @Operation(summary = "Busca livros externamente na Google Books API")
     public ResponseEntity<List<LivroResponseDTO>> buscarLivrosGoogleBooks(@org.springframework.web.bind.annotation.RequestParam String termo) {
         return ResponseEntity.ok(livroService.buscarLivrosGoogleBooks(termo));
     }
