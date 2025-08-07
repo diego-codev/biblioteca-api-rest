@@ -28,46 +28,103 @@ public class EmprestimoController {
     }
 
     @GetMapping("/{idLivro}/{idPessoa}")
-    public ResponseEntity<EmprestimoResponseDTO> getEmprestimoById(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
+    public ResponseEntity<EmprestimoResponseDTO> getEmprestimoById(@PathVariable Long idLivro, @PathVariable Long idPessoa, org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        // Se USER, só pode acessar empréstimo próprio
+        if (!usuario.getRole().name().equals("ADMIN") && !usuario.getIdPessoa().equals(idPessoa)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.getEmprestimoById(idLivro, idPessoa));
     }
 
     @PostMapping
-    public ResponseEntity<EmprestimoResponseDTO> emprestarLivro(@RequestBody EmprestimoRequestDTO emprestimoRequestDTO) {
+    public ResponseEntity<EmprestimoResponseDTO> emprestarLivro(@RequestBody EmprestimoRequestDTO emprestimoRequestDTO, org.springframework.security.core.Authentication authentication) {
+        // Pega o usuário autenticado
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        // Força o idPessoa do DTO para o usuário autenticado
+        emprestimoRequestDTO.setIdPessoa(usuario.getIdPessoa());
+        // Regra: limitar a 3 empréstimos ativos por usuário
+        List<EmprestimoResponseDTO> ativos = emprestimoService.getEmprestimosAtivos();
+        long qtdAtivos = ativos.stream().filter(e -> e.idPessoa().equals(usuario.getIdPessoa())).count();
+        if (qtdAtivos >= 3) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(emprestimoService.createEmprestimo(emprestimoRequestDTO));
     }
 
-    @PutMapping("/{idLivro}/{idPessoa}")
-    public ResponseEntity<EmprestimoResponseDTO> devolverLivro(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
-        return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.updateEmprestimo(idLivro, idPessoa));
+    @PutMapping("/{idLivro}")
+    public ResponseEntity<EmprestimoResponseDTO> devolverLivro(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        // Se ADMIN, pode devolver para qualquer pessoa; se USER, só para si mesmo
+        Long pessoaParaDevolver = usuario.getRole().name().equals("ADMIN") && idPessoa != null ? idPessoa : usuario.getIdPessoa();
+        return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.updateEmprestimo(idLivro, pessoaParaDevolver));
     }
 
-    @DeleteMapping("/{idLivro}/{idPessoa}")
-    public ResponseEntity<String> deleteEmprestimo(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
-        return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.deleteEmprestimo(idLivro, idPessoa));
+    @DeleteMapping("/{idLivro}")
+    public ResponseEntity<String> deleteEmprestimo(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        // Se ADMIN, pode excluir para qualquer pessoa; se USER, só para si mesmo
+        Long pessoaParaExcluir = usuario.getRole().name().equals("ADMIN") && idPessoa != null ? idPessoa : usuario.getIdPessoa();
+        return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.deleteEmprestimo(idLivro, pessoaParaExcluir));
     }
 
     // Histórico de empréstimos por pessoa
     @GetMapping("/historico/pessoa/{idPessoa}")
-    public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorPessoa(@PathVariable Long idPessoa) {
+    public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorPessoa(@PathVariable Long idPessoa, org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        // Se USER, só pode acessar histórico próprio
+        if (!usuario.getRole().name().equals("ADMIN") && !usuario.getIdPessoa().equals(idPessoa)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(emprestimoService.getHistoricoEmprestimosPorPessoa(idPessoa));
     }
 
     // Histórico de empréstimos por livro
     @GetMapping("/historico/livro/{idLivro}")
-    public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorLivro(@PathVariable Long idLivro) {
-        return ResponseEntity.ok(emprestimoService.getHistoricoEmprestimosPorLivro(idLivro));
+    public ResponseEntity<List<EmprestimoResponseDTO>> getHistoricoPorLivro(@PathVariable Long idLivro, org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        if (usuario.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.ok(emprestimoService.getHistoricoEmprestimosPorLivro(idLivro));
+        } else {
+            // Filtra só os empréstimos do usuário
+            List<EmprestimoResponseDTO> todos = emprestimoService.getHistoricoEmprestimosPorLivro(idLivro);
+            List<EmprestimoResponseDTO> meus = todos.stream().filter(e -> e.idPessoa().equals(usuario.getIdPessoa())).collect(java.util.stream.Collectors.toList());
+            if (meus.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            return ResponseEntity.ok(meus);
+        }
     }
 
     // Empréstimos atrasados
     @GetMapping("/atrasados")
-    public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtrasados() {
-        return ResponseEntity.ok(emprestimoService.getEmprestimosAtrasados());
+    public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtrasados(org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        if (usuario.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.ok(emprestimoService.getEmprestimosAtrasados());
+        } else {
+            List<EmprestimoResponseDTO> todos = emprestimoService.getEmprestimosAtrasados();
+            List<EmprestimoResponseDTO> meus = todos.stream().filter(e -> e.idPessoa().equals(usuario.getIdPessoa())).collect(java.util.stream.Collectors.toList());
+            if (meus.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            return ResponseEntity.ok(meus);
+        }
     }
 
     // Empréstimos ativos
     @GetMapping("/ativos")
-    public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtivos() {
-        return ResponseEntity.ok(emprestimoService.getEmprestimosAtivos());
+    public ResponseEntity<List<EmprestimoResponseDTO>> getEmprestimosAtivos(org.springframework.security.core.Authentication authentication) {
+        br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
+        if (usuario.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.ok(emprestimoService.getEmprestimosAtivos());
+        } else {
+            List<EmprestimoResponseDTO> todos = emprestimoService.getEmprestimosAtivos();
+            List<EmprestimoResponseDTO> meus = todos.stream().filter(e -> e.idPessoa().equals(usuario.getIdPessoa())).collect(java.util.stream.Collectors.toList());
+            if (meus.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            return ResponseEntity.ok(meus);
+        }
     }
 }

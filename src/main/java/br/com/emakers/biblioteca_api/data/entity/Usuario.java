@@ -11,6 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Usuario implements org.springframework.security.core.userdetails.UserDetails {
+    public Long getIdPessoa() {
+        return this.id;
+    }
     public Usuario(String email, String senha, UserRole role) {
         this.email = email;
         this.senha = senha;
