@@ -1,0 +1,17 @@
+# Maven / IDE
+.target
+/target
+.mvn/wrapper/maven-wrapper.jar
+**/.classpath
+**/.project
+**/.settings
+**/.idea
+**/.iml
+**/.vscode
+
+# OS
+**/*.log
+**/*.tmp
+
+# Node / front (caso coloque no futuro)
+node_modules

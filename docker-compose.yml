@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: biblioteca_db
+    environment:
+      POSTGRES_DB: biblioteca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    build: .
+    container_name: biblioteca_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/biblioteca
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: my-secret-key
+    ports:
+      - "8080:8080"
+    # Descomente se quiser hot reload (não recomendado em prod)
+    # volumes:
+    #   - ./src:/app/src
+volumes:
+  pgdata:
