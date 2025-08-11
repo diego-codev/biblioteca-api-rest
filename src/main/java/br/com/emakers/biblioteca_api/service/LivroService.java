@@ -3,6 +3,8 @@ import br.com.emakers.biblioteca_api.data.dto.request.LivroRequestDTO;
 import br.com.emakers.biblioteca_api.data.dto.response.LivroResponseDTO;
 import br.com.emakers.biblioteca_api.repository.LivroRepository;
 import br.com.emakers.biblioteca_api.data.entity.Livro;
+import br.com.emakers.biblioteca_api.exception.general.ResourceNotFoundException;
+import br.com.emakers.biblioteca_api.exception.general.BusinessRuleException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -33,23 +35,37 @@ public class LivroService {
 
     public LivroResponseDTO updateLivro(Long idLivro, LivroRequestDTO livroRequestDTO) {
         Livro livro = getLivroEntityById(idLivro);
+
+        // Atualizações principais
         livro.setNome(livroRequestDTO.getNome());
         livro.setAutor(livroRequestDTO.getAutor());
-        // ...
+
+        // Quantidade (se enviada). PUT aqui adota estratégia: só altera se não nulo, evitando sobrescrever acidentalmente com null
+        if (livroRequestDTO.getQuantidade() != null) {
+            if (livroRequestDTO.getQuantidade() < 0) {
+                throw new BusinessRuleException("Quantidade não pode ser negativa");
+            }
+            livro.setQuantidade(livroRequestDTO.getQuantidade());
+        }
+
+        // Data de lançamento (se enviada)
+        if (livroRequestDTO.getDataLancamento() != null) {
+            livro.setDataLancamento(livroRequestDTO.getDataLancamento());
+        }
+
         livroRepository.save(livro);
         return new LivroResponseDTO(livro);
     }
 
 
-    public String deleteLivro(Long idLivro) {
+    public void deleteLivro(Long idLivro) {
         Livro livro = getLivroEntityById(idLivro);
         livroRepository.delete(livro);
-        return "Livro id: " + idLivro + " deletado!";
     }
 
     private Livro getLivroEntityById(Long idLivro) {
         return livroRepository.findById(idLivro)
-            .orElseThrow(() -> new RuntimeException("Livro não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado: id=" + idLivro));
     }
 
     // Busca livros na Google Books API

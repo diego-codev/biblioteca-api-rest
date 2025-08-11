@@ -5,6 +5,7 @@ import br.com.emakers.biblioteca_api.data.dto.request.PessoaRequestDTO;
 import br.com.emakers.biblioteca_api.data.dto.response.PessoaResponseDTO;
 import br.com.emakers.biblioteca_api.repository.PessoaRepository;
 import br.com.emakers.biblioteca_api.data.entity.Pessoa;
+import br.com.emakers.biblioteca_api.exception.general.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.emakers.biblioteca_api.client.ViaCepClient;
 import br.com.emakers.biblioteca_api.data.dto.response.ViaCepResponseDTO;
@@ -62,14 +63,13 @@ public class PessoaService {
     }
 
 
-    public String deletePessoa(Long idPessoa) {
+    public void deletePessoa(Long idPessoa) {
         Pessoa pessoa = getPessoaEntityById(idPessoa);
         pessoaRepository.delete(pessoa);
-        return "Pessoa id: " + idPessoa + " deletada!";
     }
 
     private Pessoa getPessoaEntityById(Long idPessoa) {
         return pessoaRepository.findById(idPessoa)
-            .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada: id=" + idPessoa));
     }
 }

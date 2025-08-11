@@ -12,6 +12,8 @@ import br.com.emakers.biblioteca_api.data.dto.response.EmprestimoResponseDTO;
 import br.com.emakers.biblioteca_api.repository.EmprestimoRepository;
 import br.com.emakers.biblioteca_api.repository.LivroRepository;
 import br.com.emakers.biblioteca_api.repository.PessoaRepository;
+import br.com.emakers.biblioteca_api.exception.general.ResourceNotFoundException;
+import br.com.emakers.biblioteca_api.exception.general.BusinessRuleException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
@@ -52,16 +54,16 @@ public class EmprestimoService {
 
     public EmprestimoResponseDTO createEmprestimo(EmprestimoRequestDTO emprestimoRequestDTO) {
         Livro livro = livroRepository.findById(emprestimoRequestDTO.getIdLivro())
-            .orElseThrow(() -> new RuntimeException("Livro não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado: id=" + emprestimoRequestDTO.getIdLivro()));
         if (livro.getQuantidade() == null || livro.getQuantidade() <= 0) {
-            throw new RuntimeException("Livro indisponível para empréstimo");
+            throw new BusinessRuleException("Livro indisponível para empréstimo");
         }
         Pessoa pessoa = pessoaRepository.findById(emprestimoRequestDTO.getIdPessoa())
-            .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada: id=" + emprestimoRequestDTO.getIdPessoa()));
         // Limite de empréstimos ativos por pessoa
         int emprestimosAtivos = emprestimoRepository.findByPessoaIdPessoaAndDataDevolucaoIsNull(pessoa.getIdPessoa()).size();
         if (emprestimosAtivos >= LIMITE_EMPRESTIMOS_ATIVOS) {
-            throw new RuntimeException("Limite de empréstimos ativos atingido para esta pessoa");
+            throw new BusinessRuleException("Limite de empréstimos ativos atingido para esta pessoa");
         }
         LocalDate hoje = LocalDate.now();
         LocalDate dataPrevistaDevolucao = hoje.plusDays(7);
@@ -96,15 +98,14 @@ public class EmprestimoService {
     }
 
 
-    public String deleteEmprestimo(Long idLivro, Long idPessoa) {
+    public void deleteEmprestimo(Long idLivro, Long idPessoa) {
         Emprestimo emprestimo = getEmprestimoEntityById(idLivro, idPessoa);
         emprestimoRepository.delete(emprestimo);
-        return "Empréstimo Livro id: " + idLivro + ", Pessoa id: " + idPessoa + " deletado!";
     }
 
     private Emprestimo getEmprestimoEntityById(Long idLivro, Long idPessoa) {
         return emprestimoRepository.findById(new br.com.emakers.biblioteca_api.data.entity.EmprestimoId(idLivro, idPessoa))
-            .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Empréstimo não encontrado: livro=" + idLivro + ", pessoa=" + idPessoa));
     }
 
     // Histórico de empréstimos por pessoa

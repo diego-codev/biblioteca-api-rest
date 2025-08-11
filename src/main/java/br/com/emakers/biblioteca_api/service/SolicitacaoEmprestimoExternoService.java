@@ -6,6 +6,8 @@ import br.com.emakers.biblioteca_api.data.dto.response.SolicitacaoEmprestimoExte
 import br.com.emakers.biblioteca_api.data.entity.SolicitacaoEmprestimoExterno;
 import br.com.emakers.biblioteca_api.data.entity.StatusSolicitacao;
 import br.com.emakers.biblioteca_api.repository.SolicitacaoEmprestimoExternoRepository;
+import br.com.emakers.biblioteca_api.exception.general.ResourceNotFoundException;
+import br.com.emakers.biblioteca_api.exception.general.BusinessRuleException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +19,10 @@ import java.util.stream.Collectors;
 @Service
 public class SolicitacaoEmprestimoExternoService {
     public SolicitacaoEmprestimoExternoResponseDTO rejeitarSolicitacao(Long id) {
-        SolicitacaoEmprestimoExterno entity = repository.findById(id).orElseThrow();
+        SolicitacaoEmprestimoExterno entity = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada: id=" + id));
         if (entity.getStatus() == StatusSolicitacao.APROVADA) {
-            throw new RuntimeException("Solicitação já aprovada, não pode ser rejeitada");
+            throw new BusinessRuleException("Solicitação já aprovada, não pode ser rejeitada");
         }
         entity.setStatus(StatusSolicitacao.REJEITADA);
         repository.save(entity);
@@ -54,10 +57,11 @@ public class SolicitacaoEmprestimoExternoService {
     private br.com.emakers.biblioteca_api.repository.EmprestimoRepository emprestimoRepository;
 
     public SolicitacaoEmprestimoExternoResponseDTO aprovarSolicitacao(Long id) {
-        SolicitacaoEmprestimoExterno entity = repository.findById(id).orElseThrow();
+        SolicitacaoEmprestimoExterno entity = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada: id=" + id));
         // Se a solicitação já foi aprovada, impede duplicidade
         if (entity.getStatus() == StatusSolicitacao.APROVADA) {
-            throw new RuntimeException("Solicitação já aprovada");
+            throw new BusinessRuleException("Solicitação já aprovada");
         }
         // 1. Cadastrar o livro no acervo com quantidade 1
         br.com.emakers.biblioteca_api.data.entity.Livro livro = new br.com.emakers.biblioteca_api.data.entity.Livro();
@@ -70,7 +74,7 @@ public class SolicitacaoEmprestimoExternoService {
         // 2. Criar o empréstimo para a pessoa
         // Se a pessoa não existir, retorna erro
         br.com.emakers.biblioteca_api.data.entity.Pessoa pessoa = pessoaRepository.findById(entity.getIdPessoa())
-            .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada: id=" + entity.getIdPessoa()));
 
         br.com.emakers.biblioteca_api.data.entity.Emprestimo emprestimo = br.com.emakers.biblioteca_api.data.entity.Emprestimo.builder()
             .dto(null)
