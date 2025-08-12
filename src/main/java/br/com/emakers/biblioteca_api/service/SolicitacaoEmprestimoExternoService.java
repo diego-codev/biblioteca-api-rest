@@ -63,7 +63,7 @@ public class SolicitacaoEmprestimoExternoService {
         if (entity.getStatus() == StatusSolicitacao.APROVADA) {
             throw new BusinessRuleException("Solicitação já aprovada");
         }
-        // 1. Cadastrar o livro no acervo com quantidade 1
+        // Cadastrar o livro no acervo com quantidade 1
         br.com.emakers.biblioteca_api.data.entity.Livro livro = new br.com.emakers.biblioteca_api.data.entity.Livro();
         livro.setNome(entity.getNomeLivro());
         livro.setAutor(entity.getAutor() != null ? entity.getAutor() : "Desconhecido");
@@ -71,7 +71,7 @@ public class SolicitacaoEmprestimoExternoService {
         livro.setQuantidade(1); // Começa com 1 exemplar
         livroRepository.save(livro);
 
-        // 2. Criar o empréstimo para a pessoa
+        // Criar o empréstimo para a pessoa
         // Se a pessoa não existir, retorna erro
         br.com.emakers.biblioteca_api.data.entity.Pessoa pessoa = pessoaRepository.findById(entity.getIdPessoa())
             .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada: id=" + entity.getIdPessoa()));
@@ -89,7 +89,7 @@ public class SolicitacaoEmprestimoExternoService {
         livroRepository.save(livro);
         emprestimoRepository.save(emprestimo);
 
-        // 3. Marcar solicitação como aprovada
+        // Marcar solicitação como aprovada
         entity.setStatus(StatusSolicitacao.APROVADA);
         repository.save(entity);
         return toResponseDTO(entity);

@@ -1,6 +1,6 @@
 # BIBLIOTECA API REST
 
-API REST desenvolvida com Spring Boot para gerenciar livros, pessoas (leitores) e empréstimos. Projeto da rota Back-end do processo seletivo da Emakers Jr. Inclui autenticação JWT, documentação OpenAPI, integração externa de CEP (ViaCEP) e containerização com Docker.
+API REST desenvolvida com Spring Boot para gerenciar livros, pessoas (leitores) e empréstimos. Projeto da rota Back-end do processo seletivo da Emakers Jr. Inclui autenticação JWT, documentação OpenAPI, integração externa de CEP (ViaCEP), e containerização com Docker.
 
 ---
 
@@ -41,6 +41,7 @@ Não há roadmap de evolução pós-seletivo; foco em clareza, boas práticas e 
 | Framework | Spring Boot 3.5.x | Core da aplicação |
 | Persistência | Spring Data JPA (Hibernate) | ORM para PostgreSQL |
 | Banco de Dados | PostgreSQL 16 | Via Docker Compose |
+| Migrations | Flyway | Schema inicial versionado (V1) |
 | Validação | Jakarta Validation | @Valid em DTOs |
 | Segurança | Spring Security + JWT (java-jwt) | Stateless, filtro custom |
 | Documentação | springdoc-openapi | Swagger UI / OpenAPI 3 |
@@ -49,6 +50,7 @@ Não há roadmap de evolução pós-seletivo; foco em clareza, boas práticas e 
 | Container | Docker / Docker Compose | Empacotamento e orquestração |
 | Integração Externa | ViaCEP | Consulta endereço por CEP |
 
+> Observação: Flyway está em uso (baseline V1). Alterações futuras de schema devem ser adicionadas como novos arquivos `V2__...` em `db/migration`.
 
 ---
 
@@ -133,6 +135,7 @@ Estrutura em camadas:
 * **infra/security/**: Configurações de segurança, filtro JWT, geração/validação de token.
 * **infra/config/**: Configurações transversais (CORS opcional, Swagger/OpenAPI).
 * **client/**: Cliente ViaCEP.
+* **resources/**: `application.properties`, migrations Flyway (`db/migration`), configuração adicional e assets.
 
 Padrões adotados:
 - Respostas de erro consistentes (timestamp, status, message, path, validation errors).
@@ -189,6 +192,8 @@ Override: criar `.env` ou definir antes do comando docker compose.
 mvnw.cmd spring-boot:run # Windows
 ```
 Banco: ajustar application.properties se porta ou credenciais diferirem.
+
+Nota rápida sobre migrations: schema inicial está em `db/migration/V1__create_schema.sql`; futuras mudanças de estrutura devem ser adicionadas como `V2__...`, mantendo o V1 intacto.
 
 ---
 
@@ -280,3 +285,4 @@ Uso exclusivamente educacional para o processo seletivo Emakers Jr. Sem finalida
 - LinkedIn: in/diego-code
 
 ---
+

@@ -1,7 +1,3 @@
-
-
-// Histórico de empréstimos por pessoa
-// (métodos estavam fora da classe, corrigido)
 package br.com.emakers.biblioteca_api.service;
 
 import br.com.emakers.biblioteca_api.data.entity.Emprestimo;
