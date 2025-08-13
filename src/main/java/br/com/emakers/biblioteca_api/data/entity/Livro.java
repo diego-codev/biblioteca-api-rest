@@ -36,4 +36,8 @@ public class Livro {
         this.data_lancamento = dto.getDataLancamento();
     }
 
+        public void setDataLancamento(LocalDate dataLancamento) {
+            this.data_lancamento = dataLancamento;
+        }
+
 }
