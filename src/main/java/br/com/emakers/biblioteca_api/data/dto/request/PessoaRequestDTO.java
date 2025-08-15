@@ -12,10 +12,12 @@ public class PessoaRequestDTO {
     @Email(message = "Email deve ser válido")
     private String email;
 
+    @NotBlank(message = "CEP é obrigatório")
     @Pattern(regexp = "(\\d{5}-\\d{3})|(\\d{8})", message = "CEP deve estar no formato 00000-000 ou 8 dígitos")
     private String cep;
 
     @Pattern(regexp = "(\\d{11})|(\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2})", message = "CPF deve ter 11 dígitos ou estar no formato 000.000.000-00")
+    @NotBlank(message = "CPF é obrigatório")
     private String cpf;
 
     public String getNome() {

@@ -5,8 +5,9 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
+    <!-- Atualizado para última versão patch 3.5.4 -->
+    <version>3.5.4</version>
+        <relativePath/>
     </parent>
     <groupId>br.com.emakers</groupId>
     <artifactId>biblioteca-api</artifactId>
@@ -42,12 +43,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
+    <!-- Removido javax.servlet-api: causa conflitos em runtime com Jakarta stack do Spring Boot 3 -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -72,11 +68,11 @@
             <artifactId>java-jwt</artifactId>
             <version>4.5.0</version>
         </dependency>
-        <!-- Swagger/OpenAPI -->
+        <!-- Swagger/OpenAPI alinhado com projeto referência -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.2.0</version>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -6,13 +6,12 @@ import br.com.emakers.biblioteca_api.service.SolicitacaoEmprestimoExternoService
 import br.com.emakers.biblioteca_api.service.PessoaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import br.com.emakers.biblioteca_api.exception.general.RestErrorMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.util.List;
 
@@ -29,14 +28,11 @@ public class SolicitacaoEmprestimoExternoController {
 
     @PostMapping
     @Operation(summary = "Solicita empréstimo externo de livro")
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Solicitação criada"),
-        @ApiResponse(responseCode = "400", description = "Pessoa inexistente")
-    })
     public ResponseEntity<?> solicitarEmprestimo(@RequestBody SolicitacaoEmprestimoExternoRequestDTO dto) {
-        if (!pessoaService.existsById(dto.getIdPessoa())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Pessoa não encontrada para o id informado.");
-        }
+    if (!pessoaService.existsById(dto.getIdPessoa())) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(RestErrorMessage.of(HttpStatus.BAD_REQUEST, "Pessoa não encontrada para o id informado", "/emprestimos/externo"));
+    }
         return ResponseEntity.status(HttpStatus.CREATED).body(service.solicitarEmprestimoExterno(dto));
     }
 
@@ -48,30 +44,18 @@ public class SolicitacaoEmprestimoExternoController {
 
     @PutMapping("/solicitacoes/{id}/aprovar")
     @Operation(summary = "Aprova uma solicitação de empréstimo externo")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Solicitação aprovada"),
-        @ApiResponse(responseCode = "404", description = "Solicitação não encontrada")
-    })
     public ResponseEntity<SolicitacaoEmprestimoExternoResponseDTO> aprovarSolicitacao(@PathVariable Long id) {
         return ResponseEntity.ok(service.aprovarSolicitacao(id));
     }
 
     @PutMapping("/solicitacoes/{id}/rejeitar")
     @Operation(summary = "Rejeita uma solicitação de empréstimo externo")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Solicitação rejeitada"),
-        @ApiResponse(responseCode = "404", description = "Solicitação não encontrada")
-    })
     public ResponseEntity<SolicitacaoEmprestimoExternoResponseDTO> rejeitarSolicitacao(@PathVariable Long id) {
         return ResponseEntity.ok(service.rejeitarSolicitacao(id));
     }
 
     @DeleteMapping("/solicitacoes/{id}")
     @Operation(summary = "Remove uma solicitação de empréstimo externo")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Solicitação removida"),
-        @ApiResponse(responseCode = "404", description = "Solicitação não encontrada")
-    })
     public ResponseEntity<Void> deletarSolicitacao(@PathVariable Long id) {
         service.deletarSolicitacao(id);
         return ResponseEntity.noContent().build();

@@ -4,6 +4,7 @@ import br.com.emakers.biblioteca_api.data.dto.response.EmprestimoResponseDTO;
 import br.com.emakers.biblioteca_api.service.EmprestimoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +18,6 @@ import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 
 @RestController
@@ -32,21 +31,12 @@ public class EmprestimoController {
 
     @GetMapping
     @Operation(summary = "Lista todos os empréstimos cadastrados")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista retornada"),
-        @ApiResponse(responseCode = "401", description = "Não autenticado")
-    })
     public ResponseEntity<List<EmprestimoResponseDTO>> getAllEmprestimos() {
         return ResponseEntity.status(HttpStatus.OK).body(emprestimoService.getAllEmprestimos());
     }
 
     @GetMapping("/{idLivro}/{idPessoa}")
     @Operation(summary = "Busca um empréstimo pelo ID do livro e da pessoa")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Empréstimo encontrado"),
-        @ApiResponse(responseCode = "403", description = "Acesso negado"),
-        @ApiResponse(responseCode = "404", description = "Empréstimo não encontrado")
-    })
     public ResponseEntity<EmprestimoResponseDTO> getEmprestimoById(@PathVariable Long idLivro, @PathVariable Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se USER, só pode acessar empréstimo próprio
@@ -58,11 +48,6 @@ public class EmprestimoController {
 
     @PostMapping
     @Operation(summary = "Realiza o empréstimo de um livro para uma pessoa")
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Empréstimo criado"),
-        @ApiResponse(responseCode = "422", description = "Regra de negócio violada"),
-        @ApiResponse(responseCode = "400", description = "Dados inválidos")
-    })
     public ResponseEntity<EmprestimoResponseDTO> emprestarLivro(@RequestBody @Valid EmprestimoRequestDTO emprestimoRequestDTO, org.springframework.security.core.Authentication authentication) {
         // Pega o usuário autenticado
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
@@ -79,10 +64,6 @@ public class EmprestimoController {
 
     @PutMapping("/{idLivro}")
     @Operation(summary = "Devolve um livro emprestado")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Empréstimo atualizado (devolvido)"),
-        @ApiResponse(responseCode = "404", description = "Empréstimo não encontrado")
-    })
     public ResponseEntity<EmprestimoResponseDTO> devolverLivro(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se ADMIN, pode devolver para qualquer pessoa; se USER, só para si mesmo
@@ -92,10 +73,6 @@ public class EmprestimoController {
 
     @DeleteMapping("/{idLivro}")
     @Operation(summary = "Remove um empréstimo de livro")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Empréstimo removido"),
-        @ApiResponse(responseCode = "404", description = "Empréstimo não encontrado")
-    })
     public ResponseEntity<Void> deleteEmprestimo(@PathVariable Long idLivro, Long idPessoa, org.springframework.security.core.Authentication authentication) {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se ADMIN, pode excluir para qualquer pessoa; se USER, só para si mesmo
@@ -111,7 +88,7 @@ public class EmprestimoController {
         br.com.emakers.biblioteca_api.data.entity.Usuario usuario = (br.com.emakers.biblioteca_api.data.entity.Usuario) authentication.getPrincipal();
         // Se USER, só pode acessar histórico próprio
         if (!usuario.getRole().name().equals("ADMIN") && !usuario.getIdPessoa().equals(idPessoa)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            throw new AccessDeniedException("Acesso negado ao histórico da pessoa informada");
         }
         return ResponseEntity.ok(emprestimoService.getHistoricoEmprestimosPorPessoa(idPessoa));
     }

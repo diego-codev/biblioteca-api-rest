@@ -9,14 +9,24 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfigurations {
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final JwtAuthFilter jwtAuthFilter;
+
+    public SecurityConfigurations(com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+                                  JwtAuthFilter jwtAuthFilter) {
+        this.objectMapper = objectMapper;
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityFilter securityFilter,
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationEntryPoint authenticationEntryPoint,
                                                    AccessDeniedHandler accessDeniedHandler) throws Exception {
+    // Força recompilação: removido parâmetro antigo SecurityFilter; garantindo que assinatura reflita apenas HttpSecurity, AuthenticationEntryPoint e AccessDeniedHandler.
         return http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
@@ -39,7 +49,7 @@ public class SecurityConfigurations {
                 .requestMatchers("/emprestimos/**", "/solicitacoes-externas/**").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(securityFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(this.jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 
@@ -57,28 +67,28 @@ public class SecurityConfigurations {
     @Bean
     public AuthenticationEntryPoint jsonAuthenticationEntryPoint() {
         return (request, response, authException) -> {
-            response.setStatus(javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             var body = br.com.emakers.biblioteca_api.exception.general.RestErrorMessage.of(
                 org.springframework.http.HttpStatus.UNAUTHORIZED,
                 "Não autenticado ou token inválido.",
                 request.getRequestURI()
             );
-            response.getWriter().write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body));
+            response.getWriter().write(objectMapper.writeValueAsString(body));
         };
     }
 
     @Bean
     public AccessDeniedHandler jsonAccessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
-            response.setStatus(javax.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
             var body = br.com.emakers.biblioteca_api.exception.general.RestErrorMessage.of(
                 org.springframework.http.HttpStatus.FORBIDDEN,
                 "Acesso negado.",
                 request.getRequestURI()
             );
-            response.getWriter().write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body));
+            response.getWriter().write(objectMapper.writeValueAsString(body));
         };
     }
 }

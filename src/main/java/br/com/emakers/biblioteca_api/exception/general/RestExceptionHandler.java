@@ -1,16 +1,19 @@
 package br.com.emakers.biblioteca_api.exception.general;
 
 import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
+@Hidden // Evita que o springdoc processe este @ControllerAdvice (padrão do projeto de referência)
 @ControllerAdvice
 public class RestExceptionHandler {
 
@@ -40,6 +43,13 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(RestErrorMessage.of(HttpStatus.FORBIDDEN, ex.getMessage(), req.getRequestURI()));
     }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<RestErrorMessage> handleAuthentication(AuthenticationException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(RestErrorMessage.of(HttpStatus.UNAUTHORIZED, "Usuário inexistente ou senha inválida.", req.getRequestURI()));
+    }
+
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<RestErrorMessage> handleJpaEntityNotFound(EntityNotFoundException ex, HttpServletRequest req) {
