@@ -320,7 +320,18 @@ Erros retornam JSON padronizado, exemplo:
 ---
 
 ## Testes
+<<<<<<< HEAD
+Os testes foram realizados manualmente utilizando Swagger UI e Postman. Fluxos verificados:
+* Autenticação: login (JWT), acesso autorizado com token válido, acesso negado sem/with token inválido.
+* CRUD Livros: criação, listagem, busca por ID, atualização, exclusão (204), busca externa (Google Books) e validação de erro para ID inexistente.
+* CRUD Pessoas: criação, atualização, exclusão, enriquecimento de endereço via CEP (ViaCEP) e tratamento de CEP inválido.
+* Empréstimos: criação até o limite de 3 ativos por pessoa, rejeição do 4º, devolução (restaura quantidade), histórico por pessoa e livro, listagem de atrasados.
+* Solicitação de Empréstimo Externo: criação e validação de status retornado.
+* Regras de negócio: decremento/incremento de quantidade de livros, bloqueio por limite de empréstimos.
+* Erros padronizados: 400 (validação), 401/403 (segurança), 404 (recurso inexistente), 422 (regra de negócio), 409 (conflitos), verificando formato uniforme de resposta.
+=======
 Testes manuais via Postman e Swagger cobrindo: registro/login (JWT), CRUD de livros (incluindo restrição ADMIN), validações e enriquecimento de pessoa (CEP válido / inválido), fluxo completo de empréstimo (limite 3 ativos, devolução ajustando estoque, livro indisponível), solicitações externas (criar/aprovar/rejeitar) e códigos de erro padronizados (400,401,403,404,409,422).
+>>>>>>> 63f0b2f8c55a6a353754c0ffd1d0f92672a019b8
 
 Possíveis evoluções de testes:
 - Unitários de services críticos (`PessoaService`, `EmprestimoService`, aprovação externa).
@@ -341,7 +352,7 @@ Uso exclusivamente educacional para o processo seletivo Emakers Jr. Sem finalida
 
 ## Contato
 - GitHub: https://github.com/diego-codev
-- LinkedIn: in/diego-code
+- LinkedIn: https://www.linkedin.com/in/diego-code
 
 ---
 
