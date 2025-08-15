@@ -10,7 +10,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import br.com.emakers.biblioteca_api.repository.UsuarioRepository;
+import br.com.emakers.biblioteca_api.repository.PessoaRepository;
 
 import java.io.IOException;
 
@@ -21,7 +21,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private TokenService tokenService;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private PessoaRepository pessoaRepository;
 
     @Override
     protected void doFilterInternal(
@@ -32,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         var token = recoverToken(request);
         if (token != null) {
             var login = tokenService.validateToken(token);
-            UserDetails user = usuarioRepository.findByEmail(login).orElse(null);
+            UserDetails user = pessoaRepository.findByEmailIgnoreCase(login).orElse(null);
             if (user != null) {
                 var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);

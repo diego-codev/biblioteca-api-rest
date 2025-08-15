@@ -1,6 +1,6 @@
 # BIBLIOTECA API REST
 
-API REST desenvolvida com Spring Boot para gerenciar livros, pessoas (leitores) e empréstimos. Projeto da rota Back-end do processo seletivo da Emakers Jr. Inclui autenticação JWT, documentação OpenAPI, integração externa de CEP (ViaCEP), e containerização com Docker.
+API REST desenvolvida com Spring Boot para gerenciar livros, pessoas (leitores) e empréstimos. Projeto da rota Back-end do processo seletivo da Emakers Jr. Inclui autenticação JWT, documentação OpenAPI, integração externa de CEP (ViaCEP), integração de busca de livros (Google Books) e containerização com Docker.
 
 ---
 
@@ -48,7 +48,8 @@ Não há roadmap de evolução pós-seletivo; foco em clareza, boas práticas e 
 | Observabilidade | Spring Actuator | Healthcheck Docker |
 | Build | Maven Wrapper | mvnw / mvnw.cmd |
 | Container | Docker / Docker Compose | Empacotamento e orquestração |
-| Integração Externa | ViaCEP | Consulta endereço por CEP |
+| Integração Externa | ViaCEP / Google Books API | CEP (endereço) / Busca externa de livros |
+| Utilitário | Lombok | Reduz boilerplate em entidades/DTOs |
 
 > Observação: Flyway está em uso (baseline V1). Alterações futuras de schema devem ser adicionadas como novos arquivos `V2__...` em `db/migration`.
 
@@ -58,16 +59,24 @@ Não há roadmap de evolução pós-seletivo; foco em clareza, boas práticas e 
 
 ### Entidades Principais
 
-* **Pessoa (pessoa)**: idPessoa, nome, cpf, cep, email, senha, logradouro, bairro, localidade, uf
+* **Pessoa (pessoa)**: idPessoa, nome, cpf, cep, email, senha (BCrypt), role (USER|ADMIN), logradouro, bairro, localidade, uf
 * **Livro (livro)**: idLivro, nome, autor, data_lancamento, quantidade
-* **Empréstimo (emprestimo)**: (idLivro FK, idPessoa FK) + data_emprestimo, data_prevista_devolucao, data_devolucao
-* **Usuário (usuarios)**: id, email, senha, role (ADMIN/USER)
-* **SolicitacaoEmprestimoExterno**: id, nomeLivro, idPessoa, dataSolicitacao, status (PENDENTE|APROVADA|REJEITADA), autor, dataLancamento
+* **Empréstimo (emprestimo)**: (idLivro FK, idPessoa FK) + data_emprestimo, data_prevista_devolucao (prazo padrão 7 dias), data_devolucao
+* **SolicitacaoEmprestimoExterno**: id, nomeLivro, idPessoa, dataSolicitacao, status (PENDENTE|APROVADA|REJEITADA)
+	*Campos `autor` e `dataLancamento` existem na entidade mas não são recebidos no request DTO nem retornados no response atualmente (ficam nulos). Ao aprovar solicitação o livro criado recebe autor "Desconhecido" se não houver ajuste.*
 
-Limites/Regras:
-- Quantidade de livros decrementa/incrementa em empréstimo/devolução.
+
+Limites/Regras (implementadas):
+- Quantidade do livro decrementa ao emprestar e incrementa na devolução.
 - Limite de 3 empréstimos ativos por pessoa.
-- Devolução registra dataDevolucao e libera exemplar.
+- Prazo padrão de devolução: 7 dias a partir do empréstimo.
+- Aprovação de solicitação externa cadastra exemplar (quantidade inicial = 1) e já gera empréstimo (quantidade vai para 0). Rejeição apenas muda status.
+- Listagens ordenadas: livros e pessoas por ID asc; empréstimos gerais por idLivro/idPessoa, históricos por data de empréstimo, atrasados por data prevista.
+
+Observações sobre DTOs:
+- `LivroResponseDTO` retorna somente idLivro, nome, autor (quantidade e data de lançamento ficam internas para simplicidade de apresentação).
+- `SolicitacaoEmprestimoExternoResponseDTO` não expõe autor/dataLancamento apesar de citados na entidade.
+
 
 ### Diagrama (Mermaid)
 
@@ -98,12 +107,6 @@ erDiagram
 		date data_emprestimo
 		date data_prevista_devolucao
 		date data_devolucao
-	}
-	usuarios {
-		bigint id PK
-		string email
-		string senha
-		string role
 	}
 	solicitacao_emprestimo_externo {
 		bigint id PK
@@ -139,7 +142,7 @@ Estrutura em camadas:
 
 Padrões adotados:
 - Respostas de erro consistentes (timestamp, status, message, path, validation errors).
-- Status HTTP corretos (201 criação, 204 delete, 404 not found, 422 regra negócio, 400 validação, 401/403 segurança).
+- Status HTTP corretos (201 criação, 204 delete, 404 not found, 422 regra negócio, 400 validação, 401/403 segurança, 409 integridade, 500 genérico).
 - JWT stateless sem sessão de servidor.
 
 ---
@@ -200,25 +203,60 @@ Nota rápida sobre migrations: schema inicial está em `db/migration/V1__create_
 ## Uso
 
 Autenticação JWT:
-1. Registrar usuário (se endpoint exposto) ou usar seed existente.
-2. Autenticar e obter token (AuthenticationController -> /auth/login ou similar conforme implementação).
+1. Registrar pessoa (USER ou ADMIN) em POST /auth/register (valida CEP e preenche endereço).
+2. Autenticar em /auth/login e obter token.
 3. Enviar Authorization: Bearer <token> nas rotas protegidas.
 
-Endpoints (principais):
-- /livros (GET, POST)
-- /livros/{id} (GET, PUT, DELETE)
-- /livros/google-books?termo= (GET integração externa)
-- /pessoas (GET, POST)
-- /pessoas/{id} (GET, PUT, DELETE)
-- /emprestimos (GET todos, POST criar)
+### Regras de Acesso (Autorização)
+| Recurso | Método(s) | Acesso |
+|---------|-----------|--------|
+| /auth/register, /auth/login | POST | Público |
+| /actuator/health | GET | Público |
+| /v3/api-docs/**, /swagger-ui/** | GET | Público |
+| /livros/** (GET) | GET | Público |
+| /livros/** (POST/PUT/DELETE) | Mutação | ADMIN |
+| /pessoas (POST) | POST | ADMIN (CRUD administrativo) |
+| /pessoas/** | GET/PUT/DELETE | ADMIN |
+| /emprestimos/** | Todos | USER ou ADMIN (filtros adicionais no controller) |
+| /emprestimos/externo/** | Todos | USER ou ADMIN |
+
+Observação: Além das regras globais, o `EmprestimoController` restringe acesso de USER a seus próprios registros/histórico.
+
+Endpoints (principais) (implementados):
+- /auth/register (POST cria pessoa – valida CEP e enriquece endereço; role padrão USER)
+- /auth/login (POST autentica e retorna token JWT)
+- /livros (GET público / POST ADMIN)
+- /livros/{id} (GET público / PUT, DELETE ADMIN)
+- /livros/buscar-externo?termo= (GET público – Google Books)
+- /pessoas (ADMIN: GET lista, POST cria)
+- /pessoas/{id} (ADMIN: GET, PUT, DELETE)
+- /emprestimos (GET lista todos; POST cria – USER/ADMIN; controller aplica validações de propriedade)
+- /emprestimos/{idLivro}/{idPessoa} (GET detalha – USER só se próprio; OBS: devolução e exclusão usam rota reduzida abaixo)
+- /emprestimos/{idLivro} (PUT devolução; DELETE remove) – idPessoa sempre inferido do usuário autenticado (mesmo ADMIN). Para permitir operar em nome de terceiros seria preciso ajustar assinatura do controller.
 - /emprestimos/ativos (GET)
-- /emprestimos/{idLivro}/{idPessoa} (GET, PUT devolução, DELETE)
+- /emprestimos/atrasados (GET)
 - /emprestimos/historico/pessoa/{idPessoa}
 - /emprestimos/historico/livro/{idLivro}
-- /emprestimos/atrasados (GET)
-- /emprestimos/externo (POST solicitação)
+- /emprestimos/externo (POST criar solicitação)
+- /emprestimos/externo/solicitacoes (GET listar)
+- /emprestimos/externo/solicitacoes/{id}/aprovar (PUT)
+- /emprestimos/externo/solicitacoes/{id}/rejeitar (PUT)
+- /emprestimos/externo/solicitacoes/{id} (DELETE)
 
 ### Exemplos (curl)
+
+Registrar pessoa (público):
+```bash
+curl -X POST http://localhost:8080/auth/register \
+	-H "Content-Type: application/json" \
+	-d '{
+		"nome":"João Silva",
+		"email":"joao@exemplo.com",
+		"cep":"01001-000",
+		"cpf":"123.456.789-01",
+		"password":"minhaSenhaSegura"
+	}'
+```
 
 Login (gerar token JWT):
 ```bash
@@ -231,7 +269,7 @@ Resposta esperada:
 {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
 ```
 
-Criar livro (usar token retornado):
+Criar livro (ADMIN):
 ```bash
 curl -X POST http://localhost:8080/livros \
 	-H "Authorization: Bearer SEU_TOKEN_AQUI" \
@@ -244,9 +282,28 @@ curl -X POST http://localhost:8080/livros \
 			}'
 ```
 
-Buscar todos os livros:
+Buscar todos os livros (público):
 ```bash
-curl -H "Authorization: Bearer SEU_TOKEN_AQUI" http://localhost:8080/livros
+curl http://localhost:8080/livros
+```
+
+Busca externa (público):
+```bash
+curl "http://localhost:8080/livros/buscar-externo?termo=clean%20code"
+```
+
+Criar empréstimo (USER/ADMIN):
+```bash
+curl -X POST http://localhost:8080/emprestimos \
+	-H "Authorization: Bearer SEU_TOKEN_AQUI" \
+	-H "Content-Type: application/json" \
+	-d '{"idLivro":1}'
+```
+
+Devolver empréstimo:
+```bash
+curl -X PUT http://localhost:8080/emprestimos/1 \
+	-H "Authorization: Bearer SEU_TOKEN_AQUI"
 ```
 
 Erros retornam JSON padronizado, exemplo:
@@ -263,10 +320,12 @@ Erros retornam JSON padronizado, exemplo:
 ---
 
 ## Testes
-Não há bateria de testes automatizados inclusa no escopo do seletivo. Recomenda-se (futuro):
-- Unitários para services (LivroService, EmprestimoService).
-- Integração com WebTestClient / MockMvc para rotas críticas.
-- Teste de token expirado / acesso negado.
+Testes manuais via Postman e Swagger cobrindo: registro/login (JWT), CRUD de livros (incluindo restrição ADMIN), validações e enriquecimento de pessoa (CEP válido / inválido), fluxo completo de empréstimo (limite 3 ativos, devolução ajustando estoque, livro indisponível), solicitações externas (criar/aprovar/rejeitar) e códigos de erro padronizados (400,401,403,404,409,422).
+
+Possíveis evoluções de testes:
+- Unitários de services críticos (`PessoaService`, `EmprestimoService`, aprovação externa).
+- Integração com MockMvc simulando JWT.
+- Testes de ordenação/paginação.
 
 ---
 

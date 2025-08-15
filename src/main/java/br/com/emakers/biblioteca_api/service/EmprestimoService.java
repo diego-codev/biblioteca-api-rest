@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class EmprestimoService {
@@ -29,17 +30,19 @@ public class EmprestimoService {
     private static final int LIMITE_EMPRESTIMOS_ATIVOS = 3;
 
     public List<EmprestimoResponseDTO> getAllEmprestimos() {
-        List<Emprestimo> emprestimos = emprestimoRepository.findAll();
+        List<Emprestimo> emprestimos = emprestimoRepository.findAll(Sort.by(Sort.Direction.ASC, "livro.idLivro", "pessoa.idPessoa"));
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
     public List<EmprestimoResponseDTO> getEmprestimosAtivosPorPessoa(Long idPessoa) {
-        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoaAndDataDevolucaoIsNull(idPessoa);
+        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoaAndDataDevolucaoIsNull(idPessoa)
+            .stream().sorted(java.util.Comparator.comparing(e -> e.getLivro().getIdLivro())).toList();
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
     public List<EmprestimoResponseDTO> getEmprestimosAtivos() {
-        List<Emprestimo> emprestimos = emprestimoRepository.findByDataDevolucaoIsNull();
+        List<Emprestimo> emprestimos = emprestimoRepository.findByDataDevolucaoIsNull()
+            .stream().sorted(java.util.Comparator.comparing(e -> e.getLivro().getIdLivro())).toList();
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
@@ -106,20 +109,23 @@ public class EmprestimoService {
 
     // Histórico de empréstimos por pessoa
     public List<EmprestimoResponseDTO> getHistoricoEmprestimosPorPessoa(Long idPessoa) {
-        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoa(idPessoa);
+        List<Emprestimo> emprestimos = emprestimoRepository.findByPessoaIdPessoa(idPessoa)
+            .stream().sorted(java.util.Comparator.comparing(Emprestimo::getDataEmprestimo)).toList();
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
     // Histórico de empréstimos por livro
     public List<EmprestimoResponseDTO> getHistoricoEmprestimosPorLivro(Long idLivro) {
-        List<Emprestimo> emprestimos = emprestimoRepository.findByLivroIdLivro(idLivro);
+        List<Emprestimo> emprestimos = emprestimoRepository.findByLivroIdLivro(idLivro)
+            .stream().sorted(java.util.Comparator.comparing(Emprestimo::getDataEmprestimo)).toList();
         return emprestimos.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 
     // Empréstimos atrasados
     public List<EmprestimoResponseDTO> getEmprestimosAtrasados() {
         LocalDate hoje = LocalDate.now();
-        List<Emprestimo> atrasados = emprestimoRepository.findByDataPrevistaDevolucaoBeforeAndDataDevolucaoIsNull(hoje);
+        List<Emprestimo> atrasados = emprestimoRepository.findByDataPrevistaDevolucaoBeforeAndDataDevolucaoIsNull(hoje)
+            .stream().sorted(java.util.Comparator.comparing(Emprestimo::getDataPrevistaDevolucao)).toList();
         return atrasados.stream().map(EmprestimoResponseDTO::new).collect(Collectors.toList());
     }
 }

@@ -8,13 +8,14 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 
 /**
  * Adiciona respostas padrão essenciais para todos os endpoints.
- * Regras:
+ * Regras por método:
  *  GET: 200 (e 404 se path contém '{').
  *  POST: 201, 400.
  *  PUT: 200, 400, 404.
  *  DELETE: 204, 404.
- *  Globais básicos: 401, 403, 500.
- *  NÃO adiciona 409/422/500 automaticamente; só declarar onde realmente necessário.
+ * Globais (sempre adicionadas): 401 (não autenticado), 403 (acesso negado), 500 (erro interno genérico).
+ * Não adicionamos 409 (conflito) ou 422 (regra de negócio) automaticamente para manter o spec enxuto; declare manualmente em endpoints que realmente possam gerá-los.
+ * Após inserir as respostas, removemos o content de cada uma para que o Swagger UI mostre apenas código + descrição sem payload exemplo.
  */
 @Configuration
 public class OpenApiGlobalResponsesConfig {

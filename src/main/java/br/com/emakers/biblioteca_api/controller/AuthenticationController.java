@@ -1,8 +1,8 @@
 package br.com.emakers.biblioteca_api.controller;
 
-import br.com.emakers.biblioteca_api.repository.UsuarioRepository;
 import br.com.emakers.biblioteca_api.exception.general.RestErrorMessage;
-
+import br.com.emakers.biblioteca_api.data.entity.Pessoa;
+import br.com.emakers.biblioteca_api.service.PessoaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,25 +21,34 @@ import br.com.emakers.biblioteca_api.data.dto.request.RegisterDTO;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Autenticação", description = "Registro e login de usuários")
+@Tag(name = "Autenticação", description = "Registro (Pessoa) e login (JWT)")
 public class AuthenticationController {
     @Autowired
     private br.com.emakers.biblioteca_api.infra.security.TokenService tokenService;
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private PessoaService pessoaService;
 
     @PostMapping("/register")
-    @Operation(summary = "Realiza o cadastro de um novo usuário")
+    @Operation(summary = "Cadastra uma nova pessoa completa (valida CEP e preenche endereço)")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data) {
-    if (usuarioRepository.findByEmail(data.login()).isPresent()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(RestErrorMessage.of(HttpStatus.BAD_REQUEST, "Email já cadastrado", "/auth/register"));
-    }
-        String encryptedPassword = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(data.password());
-        var newUser = new br.com.emakers.biblioteca_api.data.entity.Usuario(data.login(), encryptedPassword, data.role());
-        usuarioRepository.save(newUser);
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(new br.com.emakers.biblioteca_api.data.dto.response.RegisterResponseDTO(newUser.getId(), newUser.getEmail(), newUser.getRole()));
+        try {
+            Pessoa pessoa = pessoaService.registrar(data);
+                return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(br.com.emakers.biblioteca_api.data.dto.response.RegisterResponseDTO.from(
+                        pessoa.getIdPessoa(),
+                        pessoa.getEmail(),
+                        pessoa.getNome(),
+                        pessoa.getRole(),
+                        pessoa.getCep(),
+                        pessoa.getLogradouro(),
+                        pessoa.getBairro(),
+                        pessoa.getLocalidade(),
+                        pessoa.getUf()
+                    ));
+        } catch (br.com.emakers.biblioteca_api.exception.general.BusinessRuleException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(RestErrorMessage.of(HttpStatus.BAD_REQUEST, e.getMessage(), "/auth/register"));
+        }
     }
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -49,7 +58,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = authenticationManager.authenticate(usernamePassword);
-        var token = tokenService.generateToken((br.com.emakers.biblioteca_api.data.entity.Usuario) auth.getPrincipal());
+    var token = tokenService.generateToken((Pessoa) auth.getPrincipal());
         return ResponseEntity.ok(new br.com.emakers.biblioteca_api.data.dto.response.LoginResponseDTO(token));
     }
 }

@@ -7,12 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Setter
 @Getter
 @NoArgsConstructor
 @Entity
 @Table(name = "pessoa")
-public class Pessoa {
+public class Pessoa implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long idPessoa;
@@ -44,6 +45,10 @@ public class Pessoa {
     @Column(name = "uf", length = 2)
     private String uf;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
+
     @Builder
     public Pessoa(PessoaRequestDTO dto) {
         this.nome = dto.getNome();
@@ -53,4 +58,22 @@ public class Pessoa {
         this.senha = dto.getSenha();
         // Os campos de endereço serão preenchidos no service
     }
+
+    // ---- UserDetails implementation ----
+    @Override
+    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
+        if (this.role == UserRole.ADMIN) {
+            return java.util.List.of(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.ADMIN.getRole()),
+                new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.USER.getRole())
+            );
+        }
+        return java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(UserRole.USER.getRole()));
+    }
+    @Override public String getPassword() { return this.senha; }
+    @Override public String getUsername() { return this.email; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }

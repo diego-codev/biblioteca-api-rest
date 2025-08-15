@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class LivroService {
@@ -16,7 +17,7 @@ public class LivroService {
     private LivroRepository livroRepository;
 
     public List<LivroResponseDTO> getAllLivros() {
-        List<Livro> livros = livroRepository.findAll();
+        List<Livro> livros = livroRepository.findAll(Sort.by(Sort.Direction.ASC, "idLivro"));
         return livros.stream().map(LivroResponseDTO::new).collect(Collectors.toList());
     }
 

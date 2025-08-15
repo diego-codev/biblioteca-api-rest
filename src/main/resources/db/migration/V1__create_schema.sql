@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS pessoa (
     cep VARCHAR(9) NOT NULL,
     email VARCHAR(100) NOT NULL,
     senha VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
     logradouro VARCHAR(100),
     bairro VARCHAR(60),
     localidade VARCHAR(60),
@@ -21,12 +22,6 @@ CREATE TABLE IF NOT EXISTS livro (
     quantidade INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS usuarios (
-    id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL
-);
 
 -- Tabela de emprestimo com PK composta (id_livro, id_pessoa)
 CREATE TABLE IF NOT EXISTS emprestimo (

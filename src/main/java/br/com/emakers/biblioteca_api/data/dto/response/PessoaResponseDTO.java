@@ -18,12 +18,19 @@ public record PessoaResponseDTO(
             pessoa.getIdPessoa(),
             pessoa.getNome(),
             pessoa.getCpf(),
-            pessoa.getCep(),
+            formatCep(pessoa.getCep()),
             pessoa.getEmail(),
             pessoa.getLogradouro(),
             pessoa.getBairro(),
             pessoa.getLocalidade(),
             pessoa.getUf()
         );
+    }
+
+    private static String formatCep(String cep) {
+        if (cep == null) return null;
+        String digits = cep.replaceAll("\\D", "");
+        if (digits.length() == 8) return digits.substring(0,5) + "-" + digits.substring(5);
+        return cep;
     }
 }

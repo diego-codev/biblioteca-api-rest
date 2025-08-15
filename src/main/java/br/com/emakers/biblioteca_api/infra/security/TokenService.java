@@ -13,7 +13,7 @@ public class TokenService {
     @Value("${api.security.token.secret}")
     private String secret;
 
-    public String generateToken(br.com.emakers.biblioteca_api.data.entity.Usuario user) {
+    public String generateToken(br.com.emakers.biblioteca_api.data.entity.Pessoa user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             String token = JWT.create()

@@ -4,7 +4,6 @@ public class SolicitacaoEmprestimoExternoRequestDTO {
     private String nomeLivro;
     private Long idPessoa;
 
-    // Getters e setters
     public String getNomeLivro() { return nomeLivro; }
     public void setNomeLivro(String nomeLivro) { this.nomeLivro = nomeLivro; }
     public Long getIdPessoa() { return idPessoa; }

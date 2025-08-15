@@ -26,7 +26,6 @@ public class SecurityConfigurations {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationEntryPoint authenticationEntryPoint,
                                                    AccessDeniedHandler accessDeniedHandler) throws Exception {
-    // Força recompilação: removido parâmetro antigo SecurityFilter; garantindo que assinatura reflita apenas HttpSecurity, AuthenticationEntryPoint e AccessDeniedHandler.
         return http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
@@ -36,17 +35,21 @@ public class SecurityConfigurations {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                // Swagger/OpenAPI public
+                // Public: documentação e autenticação
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/login").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/register").permitAll()
                 .requestMatchers("/auth/**").permitAll()
+                // Público: catálogo de livros (consulta apenas)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/livros/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/pessoas/**").permitAll()
+                // Protegido (ADMIN): dados de pessoas (contém informações sensíveis)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/pessoas/**").hasRole("ADMIN")
+                // Mutação de livros e pessoas: somente ADMIN
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/livros/**", "/pessoas/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.PUT, "/livros/**", "/pessoas/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/livros/**", "/pessoas/**").hasRole("ADMIN")
-                .requestMatchers("/emprestimos/**", "/solicitacoes-externas/**").hasAnyRole("ADMIN", "USER")
+                // Empréstimos (inclui /emprestimos/externo**): requer usuário autenticado (USER ou ADMIN)
+                .requestMatchers("/emprestimos/**").hasAnyRole("ADMIN", "USER")
+                // Demais rotas autenticadas
                 .anyRequest().authenticated()
             )
             .addFilterBefore(this.jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
